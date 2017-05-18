@@ -26,4 +26,5 @@ def test():
 
 if __name__ == '__main__':
 	manager.run()
+
 	# Creating a new branch is quick & simple.
