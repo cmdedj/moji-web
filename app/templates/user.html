@@ -7,7 +7,8 @@
     <p>
 		{% if user.name %}{{ user.name }}{% endif %}
         {% if user.location %}
-            From <a href="http://maps.google.com/?q={{ user.location }}"
+            From <a href="http://maps.google.com/?q={{ user.location }}">
+				{{ user.location }}
             </a>
         {% endif %}
     </p>
@@ -18,7 +19,14 @@
     {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
 	<p>
 		Member since {{ moment(user.member_since).format('L') }}.
-		Last seen {{ moment(user.last_seen).fromNow() }}.
+		Last seen {{ moment(user.last_seen).fromNow(refresh=True) }}.
     </p>
+	<p>
+		{% if user == current_user %}
+		<a class="btn btn-default" href="{{ url_for('main.edit_profile') }}">
+			Edit Profile
+		</a>
+		{% endif %}
+	</p>
 </div>
 {% endblock %}
