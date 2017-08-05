@@ -1,13 +1,13 @@
-Dear {{ user.username }},
+亲爱的 {{ user.username }},
 
-Welcome to Flasky!
+欢迎来到默际
 
-To confirm your account please click on the following link:
+点击以下链接来确认你的账户:
 
 {{ url_for('auth.confirm', token=token, _external=True) }}
 
-Sincerely,
+此致,
 
-The Flasky Team
+cmdedj
 
-Note: replies to this email address are not monitored.
+ps:回复此邮件喵用都没有

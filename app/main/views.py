@@ -41,7 +41,7 @@ def edit_profile():
         current_user.location = form.location.data
         current_user.about_me = form.about_me.data
         db.session.add(current_user)
-        flash('Your profile has been updated.')
+        flash('你的资料已经被更新')
         return redirect(url_for('main.user', username=current_user.username))
     form.name.data = current_user.name
     form.location.data = current_user.location
@@ -64,7 +64,7 @@ def edit_profile_admin(id):
         user.location = form.location.data
         user.about_me = form.about_me.data
         db.session.add(user)
-        flash('此个人信息已被更新。')
+        flash('个人资料已被更新。')
         return redirect(url_for('main.user', username=user.username))
     form.email.data = user.email
     form.username.data = user.username
@@ -139,14 +139,14 @@ def followers(username):
     page = request.args.get('page', 1, type=int)
     pagination = user.followers.paginate(page, per_page=current_app.config['FLASKY_FOLLOWERS_PER_PAGE'], error_out=False)
     follows = [{'user': item.follower, 'timestamp': item.timestamp} for item in pagination.items]
-    return render_template('followers.html', user=user, title="Followers of", endpoint='.followers', pagination=pagination, follows=follows)
+    return render_template('followers.html', user=user, title="粉丝", endpoint='.followers', pagination=pagination, follows=follows)
 
 
 @main.route('/followed-by/<username>')
 def followed_by(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        flash('Invalid user.')
+        flash('无效的用户')
         return redirect(url_for('.index'))
     page = request.args.get('page', 1, type=int)
     pagination = user.followed.paginate(
@@ -154,4 +154,4 @@ def followed_by(username):
         error_out=False)
     follows = [{'user': item.followed, 'timestamp': item.timestamp}
                for item in pagination.items]
-    return render_template('followers.html', user=user, title="Followed by", endpoint='.followed_by', pagination=pagination, follows=follows)
+    return render_template('followers.html', user=user, title="关注", endpoint='.followed_by', pagination=pagination, follows=follows)
