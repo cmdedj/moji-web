@@ -2,19 +2,26 @@ from flask import render_template, session, redirect, url_for, current_app, abor
 from flask_login import login_required, current_user
 from app.decorators import admin_required, permission_required
 from .. import db
-from ..models import User, Role, Permission, Post
-from ..email import send_email
+from ..models import User, Role, Permission, Post, Comment
 from . import main
-from .forms import NameForm, EditProfileForm, EditProfileAdminForm, PostForm
+from .forms import EditProfileForm, EditProfileAdminForm, PostForm, CommentForm
 
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
     form = PostForm()
-    if current_user.can(Permission.WRITE_ARTICLES) and form.validate_on_submit():
-        post = Post(body=form.body.data, author=current_user._get_current_object())
-        db.session.add(post)
-        return redirect(url_for('.index'))
+    if form.validate_on_submit():
+        if not current_user.can(Permission.WRITE_ARTICLES):
+            session['article'] = form.body.data
+            flash("需登陆后才可以写文章")
+            return redirect(url_for('auth.login', next='/'))
+        else:
+            if form.body.data == session.get('article'):
+                session['article'] = ''
+            post = Post(body=form.body.data, author=current_user._get_current_object())
+            db.session.add(post)
+            return redirect(url_for('.index'))
+    form.body.data = session.get('article')
     page = request.args.get('page', 1, type=int)
     show_followed = False
     if current_user.is_authenticated:
@@ -99,10 +106,27 @@ def edit_profile_admin(id):
     return render_template('edit_profile.html', form=form, user=user)
 
 
-@main.route('/post/<int:id>')
+@main.route('/post/<int:id>', methods=['GET', 'POST'])
 def post(id):
     post = Post.query.get_or_404(id)
-    return render_template('post.html', posts=[post])
+    form = CommentForm()
+    if form.validate_on_submit():
+        if not current_user.can(Permission.COMMENT):
+            session['comment'] = form.body.data
+            flash("需登陆后才可以评论")
+            return redirect(url_for('auth.login', next='/post/' + str(id)))
+        else:
+            if form.body.data == session.get('comment'):
+                session['comment'] = ''
+            comment = Comment(body=form.body.data, post=post, author=current_user._get_current_object())
+            db.session.add(comment)
+            flash('你已评论')
+            return redirect(url_for('.post', id=post.id, page=1))
+    form.body.data = session.get('comment')
+    page = request.args.get('page', 1, type=int)
+    pagination = post.comments.order_by(Comment.timestamp.desc()).paginate(page, per_page=current_app.config['FLASKY_COMMENTS_PER_PAGE'], error_out=False)
+    comments = pagination.items
+    return render_template('post.html', posts=[post], form=form, comments=comments, pagination=pagination)
 
 
 @main.route('/edit/<int:id>', methods=['GET', 'POST'])
